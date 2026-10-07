@@ -1,6 +1,6 @@
 # Prénom     : Yanis
 # Nom        : Pioton
-# N°étudiant : 21217092
+
 
 import meshio
 import numpy as np
@@ -12,8 +12,8 @@ import matplotlib.pyplot as plt
 # TP 1 (les codes ont été adaptés)
 
 # Les codes de :
-# erreurL2(Sol,vertex,id_free,Mass,p,q) 
-# erreurH1(Sol,vertex,id_free,Mass,Stiffness,p,q) 
+# - erreurL2(Sol,vertex,id_free,Mass,p,q) 
+# - erreurH1(Sol,vertex,id_free,Mass,Stiffness,p,q) 
 # viennent du TP1 mais ont été adapté pour le projet.
 
 
@@ -229,7 +229,7 @@ def ConvectionMatrix(vtx, elt, b) : #b est un vecteur de R^2
 # Un calcul explicite des dérivées partielles de f nous donne que (on note (.,.)
 # le produit scalaire et ||.|| la norme euclidienne de R^2):
 
-# d^{2}f(x,y) = (df(x,y),b) - (||b||^2/4 + pi^2*(p^2 + q^2))*f(x,y)
+# ∆f(x,y) = (∇f(x,y),b) - (||b||^2/4 + pi^2*(p^2 + q^2))*f(x,y)
 
 # Et donc que :
 
@@ -318,6 +318,7 @@ def erreurH1(Sol,vertex,id_free,Mass,Stiffness,p,q) :
 
 def trace_erreurs(p,q) :
     A = [10,50,100,150]
+    h = 1/np.array(A)
 
     Z = []
     G = []
@@ -326,24 +327,22 @@ def trace_erreurs(p,q) :
         Z.append(erreurL2(u, vtx, indices_libres, M, p, q)) # Tracé de l'erreur L^2
         G.append(erreurH1(u, vtx, indices_libres, M, K, p, q)) # Tracé de l'erreur H^1
 
+    ordre_L2 = np.polyfit(np.log(h), np.log(Z), 1)[0]
+    ordre_H1 = np.polyfit(np.log(h), np.log(G), 1)[0]
 
     fig, axes = plt.subplots(2, 1, figsize=(8,10), constrained_layout=True)
 
-    axes[0].loglog(A,Z, label='erreur relative L^2', color='blue')
-    axes[0].set_title("Évolution de l'erreur dans $L^2$")
-    axes[0].set_xlabel('N (Nombre de subdivisions)')
-    axes[0].set_ylabel(' Erreur ')
-    axes[0].grid(True)
-    axes[0].legend()
+    for ax, err, nom, ordre in [(axes[0], Z, 'L^2', ordre_L2), (axes[1], G, 'H^1', ordre_H1)] :
+        ax.loglog(h,err, 'o-', color='blue', label=f'erreur relative ${nom}$ (ordre≈{ordre:.3f}))')
+        ax.loglog(h, err[0]*(h/h[0])**2, '--', color='gray', label='pente 2 (référence)')
+        ax.set_title(f"Évolution de l'erreur dans ${nom}$")
+        ax.set_xlabel('h = 1/N')
+        ax.set_ylabel(' Erreur relative ')
+        ax.grid(True)
+        ax.legend()
 
-    axes[1].loglog(A,G, label='erreur relative H^1', color='blue')
-    axes[1].set_title("Évolution de l'erreur dans $H^1$")
-    axes[1].set_xlabel('N (Nombre de subdivisions)')
-    axes[1].set_ylabel(' Erreur ')
-    axes[1].grid(True)
-    axes[1].legend()
 
-    fig.suptitle( "Analyse de la convergence relative avec l'interpolant de Lagrange,\n pour N = 10, 50, 100 et 150 "
+    fig.suptitle( "Analyse de la convergence relative avec l'interpolant de Lagrange, pour\n N = 10, 50, 100 et 150 subdivisions"
                  f"et (p,q) = {p,q} , en échelle logarithmique" )
 
     plt.show()
@@ -480,26 +479,26 @@ F = [10,50,100,150]
 
 # Question (e) - Vecteur solution du problème
 
-#for (a,b) in E :
+#for (a,c) in E :
     #for N in F :
-        #u_h,_,_,_,_,_,_,_ = Sol_EDP1(a,b,N,N)
+        #u_h,_,_,_,_,_,_,_ = Sol_EDP1(a,c,N,N)
         #print("Approximation P_1 de la solution à l'EDP de la partie 1 pour "
-        #f"{2*N**2} triangles dans le maillage et pour (p,q) = {a,b} : ",u_h)
+        #f"{2*N**2} triangles dans le maillage et pour (p,q) = {a,c} : ",u_h)
 
 
 
 # Question (f) - Tracé de l'approximation numérique u_h
 
-#for (a,b) in E :
+#for (a,c) in E :
     #for N in F :
-        #Plot_approximation(a,b,N,N)
+        #Plot_approximation(a,c,N,N)
 
 
 
 # Question (g) - Tracé de la convergence des erreurs L^{2}(Ω) et H^{1}(Ω)
 
-for (a,b) in E :
-    trace_erreurs(a,b)
+for (a,c) in E :
+    trace_erreurs(a,c)
 
 
 
